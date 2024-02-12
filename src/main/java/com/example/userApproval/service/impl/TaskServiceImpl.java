@@ -22,11 +22,11 @@ import java.util.UUID;
 
 @Service
 public class TaskServiceImpl implements TaskService {
-    private TaskRepository taskRepository;
+    private final TaskRepository taskRepository;
 
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    private TaskStatusService taskStatusService;
+    private final TaskStatusService taskStatusService;
     @Autowired
     public TaskServiceImpl(TaskRepository taskRepository, UserRepository userRepository, TaskStatusService taskStatusService) {
         this.taskRepository = taskRepository;
