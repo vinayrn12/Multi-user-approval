@@ -71,7 +71,13 @@ public class TaskServiceImpl implements TaskService {
             throw new TaskAlreadyApprovedException("Task is already approved");
         }
 
-        int approvalCountByUser = taskStatusService.getApprovalCountForUser(taskId, userId);
+        if(taskStatusService.getStatusCount(taskId, "Pending") == 3) {
+            //check if current user is in the list for approvers
+            if(taskStatusService.getUserTaskStatus(taskId, userId, "Pending") == 0)
+                throw new CannotApproveTask("The task already has three mandatory approvers.");
+        }
+
+        int approvalCountByUser = taskStatusService.getUserTaskStatus(taskId, userId, "Approved");
 
         if(approvalCountByUser > 0) {
             throw new TaskAlreadyApprovedException("Task is already approved by the user");
@@ -87,7 +93,7 @@ public class TaskServiceImpl implements TaskService {
             taskStatusService.updateTaskStatus(taskId, userId);
         }
 
-        int approvalCount = taskStatusService.getApprovalCount(taskId);
+        int approvalCount = taskStatusService.getStatusCount(taskId, "Approved");
 
         if(approvalCount == 3) {
             task.setStatus("Approved");

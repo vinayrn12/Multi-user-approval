@@ -27,12 +27,12 @@ public class TaskStatusService {
         }
     }
 
-    public int getApprovalCountForUser(String taskId, String userId) {
-        return taskStatusRepository.approvalCountByUser(taskId, userId).get();
+    public int getUserTaskStatus(String taskId, String userId, String status) {
+        return taskStatusRepository.taskUserStatus(taskId, userId, status).get();
     }
 
-    public int getApprovalCount(String taskId) {
-        return taskStatusRepository.approvalCount(taskId).get();
+    public int getStatusCount(String taskId, String status) {
+        return taskStatusRepository.statusCount(taskId, status).get();
     }
 
     public void updateTaskStatus(String taskId, String userId) {

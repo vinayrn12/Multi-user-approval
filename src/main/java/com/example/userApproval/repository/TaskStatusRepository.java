@@ -9,14 +9,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 public interface TaskStatusRepository extends JpaRepository<TaskStatus, Long> {
-    @Query("SELECT COUNT(t) FROM TaskStatus t WHERE t.taskId = :taskId AND t.userId = :userId AND t.status = 'Approved'")
-    Optional<Integer> approvalCountByUser(String taskId, String userId);
+    @Query("SELECT COUNT(t) FROM TaskStatus t WHERE t.taskId = :taskId AND t.userId = :userId AND t.status = :status")
+    Optional<Integer> taskUserStatus(String taskId, String userId, String status);
 
     @Query("SELECT COUNT(t) FROM TaskStatus t WHERE t.taskId = :taskId AND t.userId = :userId")
     Optional<Integer> taskApproverCount(String taskId, String userId);
 
-    @Query("SELECT COUNT(t) FROM TaskStatus t WHERE t.taskId = :taskId AND t.status = 'Approved'")
-    Optional<Integer> approvalCount(String taskId);
+    @Query("SELECT COUNT(t) FROM TaskStatus t WHERE t.taskId = :taskId AND t.status = :status")
+    Optional<Integer> statusCount(String taskId, String status);
 
     @Modifying
     @Transactional
