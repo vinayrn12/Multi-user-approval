@@ -12,11 +12,13 @@ import com.example.userApproval.repository.UserRepository;
 import com.example.userApproval.service.TaskService;
 import com.example.userApproval.service.TaskStatusService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -41,11 +43,8 @@ public class TaskServiceImpl implements TaskService {
     public void createTask(TaskDto taskDto, String author) {
         Task task = new Task();
         String taskId = UUID.randomUUID().toString();
-        task.setTaskId(taskId);
-        task.setTitle(taskDto.getTitle());
-        task.setDescription(taskDto.getDescription());
-        task.setAuthor(author);
-        task.setStatus("New");
+        task.setTaskId(taskId).setTitle(taskDto.getTitle())
+                .setDescription(taskDto.getDescription()).setAuthor(author).setStatus("New");
         if(!CollectionUtils.isEmpty(taskDto.getApprovers())) {
             for(String approver : taskDto.getApprovers()) {
                 if(!approver.equalsIgnoreCase(author)) {
@@ -58,15 +57,47 @@ public class TaskServiceImpl implements TaskService {
                 }
             }
         }
-        taskRepository.save(task);
+        try {
+            taskRepository.save(task);
+        } catch (Exception ex) {
+            throw new DatabaseException("Error saving details to database");
+        }
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Task> getTasks() {
-        return taskRepository.findAll();
+        List<Task> tasks = new ArrayList<>();
+        try{
+            tasks = taskRepository.findAll();
+        } catch (Exception ex) {
+            throw new DatabaseException("Error fetching tasks from database");
+        }
+        return tasks;
     }
 
-    public void approveTask(String taskId, String userName) throws Exception {
+    public ResponseEntity<String> handleTaskAction(String username, String taskId, String action, String commentContent) {
+        if("Approve".equalsIgnoreCase(action)) {
+            try {
+                approveTask(taskId, username);
+                return ResponseEntity.ok("Task approved successfully");
+            } catch (Exception ex) {
+                throw new TaskException("Error approving task: " + ex.getMessage());
+            }
+        } else if("Comment".equalsIgnoreCase(action)) {
+            if(ObjectUtils.isEmpty(commentContent)) {
+                return ResponseEntity.badRequest().body("Comment content is required");
+            } else {
+                addCommentToTask(taskId, commentContent, username);
+                return ResponseEntity.ok("Comment added successfully");
+            }
+        } else {
+            return ResponseEntity.badRequest().body("Action is invalid");
+        }
+    }
+
+    @Transactional
+    private void approveTask(String taskId, String userName) throws Exception {
         Task task = taskRepository.findTaskByTaskId(taskId).get();
         String userId = userRepository.findUserIdByEmail(userName).get();
 
@@ -110,7 +141,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Transactional
-    public void addCommentToTask(String taskId, String commentContent, String author) {
+    private void addCommentToTask(String taskId, String commentContent, String author) {
         Task task;
         try{
             task = taskRepository.findTaskByTaskId(taskId).get();

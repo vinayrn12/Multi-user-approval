@@ -30,47 +30,19 @@ public class TaskController {
 
     @PostMapping
     public ResponseEntity<String> createTask(@RequestBody TaskDto taskDto, Principal principal) {
-        String author = principal.getName();
-        try{
-            taskService.createTask(taskDto, author);
-        } catch (DataIntegrityViolationException ex){
-            throw new DatabaseException("Error creating task " + ex.getMessage());
-        }
+        taskService.createTask(taskDto, principal.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body("Task " + taskDto.getTitle() + " created successfully");
     }
 
     @GetMapping
-    @Transactional(readOnly = true)
-    public ResponseEntity viewTasks(Authentication authentication) {
-        List<Task> tasks = new ArrayList<>();
-        try{
-            tasks = taskService.getTasks();
-        } catch (Exception ex){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error fetching tasks. Please try again");
-        }
+    public ResponseEntity<List<Task>> viewTasks(Authentication authentication) {
+        List<Task> tasks = taskService.getTasks();
         return ResponseEntity.status(HttpStatus.OK).body(tasks);
     }
 
     @PostMapping("/{taskId}")
     public ResponseEntity<String> handleTaskAction(@PathVariable String taskId, @RequestParam("action") String action,
                                                    @RequestBody(required = false) String commentContent, Principal principal) {
-        String username = principal.getName();
-        if("Approve".equalsIgnoreCase(action)) {
-            try {
-                taskService.approveTask(taskId, username);
-                return ResponseEntity.ok("Task approved successfully");
-            } catch (Exception ex) {
-                throw new TaskException("Error approving task: " + ex.getMessage());
-            }
-        } else if("Comment".equalsIgnoreCase(action)) {
-            if(ObjectUtils.isEmpty(commentContent)) {
-                return ResponseEntity.badRequest().body("Comment content is required");
-            } else {
-                taskService.addCommentToTask(taskId, commentContent, username);
-                return ResponseEntity.ok("Comment added successfully");
-            }
-        } else {
-            return ResponseEntity.badRequest().body("Action is invalid");
-        }
+        return taskService.handleTaskAction(principal.getName(), taskId, action, commentContent);
     }
 }

@@ -10,7 +10,7 @@ import lombok.Setter;
 @Table(name = "comments")
 @Getter
 @Setter
-@JsonIdentityInfo(generator= ObjectIdGenerators.UUIDGenerator.class, property="id")
+@JsonIdentityInfo(generator=ObjectIdGenerators.UUIDGenerator.class, property="id")
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

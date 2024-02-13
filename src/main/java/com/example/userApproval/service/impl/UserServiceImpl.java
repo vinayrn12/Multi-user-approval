@@ -53,6 +53,7 @@ public class UserServiceImpl implements UserService {
         return passwordEncoder.matches(password, storedPassword);
     }
 
+    @Override
     public ResponseEntity<String> generateJwtToken(UserDto userDto) {
         String email = userDto.getEmail();
 

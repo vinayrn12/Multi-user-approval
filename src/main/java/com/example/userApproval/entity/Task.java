@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +14,8 @@ import java.util.List;
 @Table(name = "tasks")
 @Getter
 @Setter
-@JsonIdentityInfo(generator= ObjectIdGenerators.UUIDGenerator.class, property="id")
+@Accessors(chain = true)
+@JsonIdentityInfo(generator=ObjectIdGenerators.UUIDGenerator.class, property="id")
 public class Task {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
