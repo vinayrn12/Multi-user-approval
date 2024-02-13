@@ -123,6 +123,7 @@ public class TaskServiceImpl implements TaskService {
         Comment comment = new Comment();
         comment.setContent(commentContent);
         comment.setAuthor(author);
+        comment.setTask(task);
 
         task.addComment(comment);
 
