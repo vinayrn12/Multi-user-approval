@@ -1,7 +1,7 @@
 package com.example.userApproval.service;
 
 import com.example.userApproval.entity.TaskStatus;
-import com.example.userApproval.exception.database.DatabaseSaveException;
+import com.example.userApproval.exception.DatabaseException;
 import com.example.userApproval.repository.TaskStatusRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,7 +23,7 @@ public class TaskStatusService {
         try{
             taskStatusRepository.save(taskStatus);
         } catch (Exception ex) {
-            throw new DatabaseSaveException("Error in saving details to database.");
+            throw new DatabaseException("Error in saving details to database.");
         }
     }
 

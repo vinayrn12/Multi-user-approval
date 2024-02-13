@@ -2,8 +2,8 @@ package com.example.userApproval.controller;
 
 import com.example.userApproval.dto.TaskDto;
 import com.example.userApproval.entity.Task;
-import com.example.userApproval.exception.database.DatabaseSaveException;
-import com.example.userApproval.exception.task.CannotApproveTaskException;
+import com.example.userApproval.exception.DatabaseException;
+import com.example.userApproval.exception.TaskException;
 import com.example.userApproval.service.impl.TaskServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -34,7 +34,7 @@ public class TaskController {
         try{
             taskService.createTask(taskDto, author);
         } catch (DataIntegrityViolationException ex){
-            throw new DatabaseSaveException("Error creating task " + ex.getMessage());
+            throw new DatabaseException("Error creating task " + ex.getMessage());
         }
         return ResponseEntity.status(HttpStatus.CREATED).body("Task " + taskDto.getTitle() + " created successfully");
     }
@@ -60,7 +60,7 @@ public class TaskController {
                 taskService.approveTask(taskId, username);
                 return ResponseEntity.ok("Task approved successfully");
             } catch (Exception ex) {
-                throw new CannotApproveTaskException("Error approving task: " + ex.getMessage());
+                throw new TaskException("Error approving task: " + ex.getMessage());
             }
         } else if("Comment".equalsIgnoreCase(action)) {
             if(ObjectUtils.isEmpty(commentContent)) {
