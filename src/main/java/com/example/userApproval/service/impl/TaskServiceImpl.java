@@ -1,5 +1,6 @@
 package com.example.userApproval.service.impl;
 
+import com.example.userApproval.dto.EmailDto;
 import com.example.userApproval.dto.TaskDto;
 import com.example.userApproval.entity.Comment;
 import com.example.userApproval.entity.Task;
@@ -9,6 +10,7 @@ import com.example.userApproval.exception.TaskException;
 import com.example.userApproval.repository.CommentRepository;
 import com.example.userApproval.repository.TaskRepository;
 import com.example.userApproval.repository.UserRepository;
+import com.example.userApproval.service.EmailService;
 import com.example.userApproval.service.TaskService;
 import com.example.userApproval.service.TaskStatusService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,13 +31,15 @@ public class TaskServiceImpl implements TaskService {
 
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
+    private final EmailService emailService;
 
     private final TaskStatusService taskStatusService;
     @Autowired
-    public TaskServiceImpl(TaskRepository taskRepository, UserRepository userRepository, CommentRepository commentRepository, TaskStatusService taskStatusService) {
+    public TaskServiceImpl(TaskRepository taskRepository, UserRepository userRepository, CommentRepository commentRepository, EmailService emailService, TaskStatusService taskStatusService) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
         this.commentRepository = commentRepository;
+        this.emailService = emailService;
         this.taskStatusService = taskStatusService;
     }
 
@@ -51,6 +55,7 @@ public class TaskServiceImpl implements TaskService {
                     try{
                         String approverId = userRepository.findUserIdByEmail(approver).get();
                         taskStatusService.addTaskApprover(taskId, approverId);
+                        sendEmailToApprover(approver);
                     } catch (NoSuchElementException ex) {
                         throw new DatabaseException("One of the given approvers is not listed with us.");
                     }
@@ -62,6 +67,13 @@ public class TaskServiceImpl implements TaskService {
         } catch (Exception ex) {
             throw new DatabaseException("Error saving details to database");
         }
+    }
+
+    private void sendEmailToApprover(String approver) {
+        EmailDto emailDto = new EmailDto();
+        emailDto.setTo(approver).setSubject("Approval Required")
+                .setText("You are marked as a mandatory approver for this task");
+        emailService.sendSimpleMessage(emailDto);
     }
 
     @Override

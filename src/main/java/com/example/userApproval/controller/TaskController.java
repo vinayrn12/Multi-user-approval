@@ -2,20 +2,14 @@ package com.example.userApproval.controller;
 
 import com.example.userApproval.dto.TaskDto;
 import com.example.userApproval.entity.Task;
-import com.example.userApproval.exception.DatabaseException;
-import com.example.userApproval.exception.TaskException;
 import com.example.userApproval.service.impl.TaskServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
