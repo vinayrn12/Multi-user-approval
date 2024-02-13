@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class TaskStatusService {
-    private TaskStatusRepository taskStatusRepository;
+    private final TaskStatusRepository taskStatusRepository;
 
     @Autowired
     public TaskStatusService(TaskStatusRepository taskStatusRepository) {

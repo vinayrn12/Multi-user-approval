@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class UserController {
     private final UserServiceImpl userService;
-    private JwtTokenUtil jwtTokenUtil;
+    private final JwtTokenUtil jwtTokenUtil;
 
     @Autowired
     public UserController(UserServiceImpl userService, JwtTokenUtil jwtTokenUtil) {
