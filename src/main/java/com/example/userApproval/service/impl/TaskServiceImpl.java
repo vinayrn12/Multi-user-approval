@@ -1,18 +1,21 @@
 package com.example.userApproval.service.impl;
 
 import com.example.userApproval.dto.TaskDto;
+import com.example.userApproval.entity.Comment;
 import com.example.userApproval.entity.Task;
 import com.example.userApproval.entity.TaskStatus;
 import com.example.userApproval.exception.database.DatabaseSaveException;
-import com.example.userApproval.exception.task.CannotApproveTask;
+import com.example.userApproval.exception.task.CannotApproveTaskException;
 import com.example.userApproval.exception.task.TaskAlreadyApprovedException;
 import com.example.userApproval.exception.task.TaskNotFoundException;
+import com.example.userApproval.repository.CommentRepository;
 import com.example.userApproval.repository.TaskRepository;
 import com.example.userApproval.repository.UserRepository;
 import com.example.userApproval.service.TaskService;
 import com.example.userApproval.service.TaskStatusService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
@@ -25,12 +28,14 @@ public class TaskServiceImpl implements TaskService {
     private final TaskRepository taskRepository;
 
     private final UserRepository userRepository;
+    private final CommentRepository commentRepository;
 
     private final TaskStatusService taskStatusService;
     @Autowired
-    public TaskServiceImpl(TaskRepository taskRepository, UserRepository userRepository, TaskStatusService taskStatusService) {
+    public TaskServiceImpl(TaskRepository taskRepository, UserRepository userRepository, CommentRepository commentRepository, TaskStatusService taskStatusService) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
+        this.commentRepository = commentRepository;
         this.taskStatusService = taskStatusService;
     }
 
@@ -72,7 +77,7 @@ public class TaskServiceImpl implements TaskService {
         }
 
         if(userName.equals(task.getAuthor())) {
-            throw new CannotApproveTask("The task cannot be approved by the user who has created it");
+            throw new CannotApproveTaskException("The task cannot be approved by the user who has created it");
         }
 
         if("Approved".equals(task.getStatus())) {
@@ -106,18 +111,37 @@ public class TaskServiceImpl implements TaskService {
 
     }
 
+    @Transactional
+    public void addCommentToTask(String taskId, String commentContent, String author) {
+        Task task;
+        try{
+            task = taskRepository.findTaskByTaskId(taskId).get();
+        } catch(Exception ex) {
+            throw new TaskNotFoundException("Task with id: " + taskId + " not found");
+        }
+
+        Comment comment = new Comment();
+        comment.setContent(commentContent);
+        comment.setAuthor(author);
+
+        task.addComment(comment);
+
+        taskRepository.save(task);
+        commentRepository.save(comment);
+    }
+
     private void handleMandatoryApprovers(String taskId, String userId) {
         int mandatoryApproversCount = taskStatusService.getStatusCount(taskId, "Pending");
         if(mandatoryApproversCount == 3) {
             //check if current user is in the list for approvers
             if(taskStatusService.getUserTaskStatus(taskId, userId, "Pending") == 0)
-                throw new CannotApproveTask("The task already has three mandatory approvers.");
+                throw new CannotApproveTaskException("The task already has three mandatory approvers.");
         } else if(mandatoryApproversCount == 2) {
             if(taskStatusService.getStatusCount(taskId, "Approved") == 1 && taskStatusService.getUserTaskStatus(taskId, userId, "Pending") == 0)
-                throw new CannotApproveTask("The task already has two mandatory approvers.");
+                throw new CannotApproveTaskException("The task already has two mandatory approvers.");
         } else if(mandatoryApproversCount == 1) {
             if(taskStatusService.getStatusCount(taskId, "Approved") == 2 && taskStatusService.getUserTaskStatus(taskId, userId, "Pending") == 0)
-                throw new CannotApproveTask("The task already has a mandatory approver.");
+                throw new CannotApproveTaskException("The task already has a mandatory approver.");
         }
     }
 }

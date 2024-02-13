@@ -4,10 +4,12 @@ import com.example.userApproval.entity.TaskStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
+@Repository
 public interface TaskStatusRepository extends JpaRepository<TaskStatus, Long> {
     @Query("SELECT COUNT(t) FROM TaskStatus t WHERE t.taskId = :taskId AND t.userId = :userId AND t.status = :status")
     Optional<Integer> taskUserStatus(String taskId, String userId, String status);

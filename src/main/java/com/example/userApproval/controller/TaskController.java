@@ -3,12 +3,14 @@ package com.example.userApproval.controller;
 import com.example.userApproval.dto.TaskDto;
 import com.example.userApproval.entity.Task;
 import com.example.userApproval.exception.database.DatabaseSaveException;
+import com.example.userApproval.exception.task.CannotApproveTaskException;
 import com.example.userApproval.service.impl.TaskServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,12 +29,8 @@ public class TaskController {
     }
 
     @PostMapping
-    public ResponseEntity<String> createTask(@RequestBody TaskDto taskDto, Authentication authentication) {
-        if(ObjectUtils.isEmpty(authentication) || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User needs to be logged in to perform this action");
-        }
-
-        String author = authentication.getPrincipal().toString();
+    public ResponseEntity<String> createTask(@RequestBody TaskDto taskDto, Principal principal) {
+        String author = principal.getName();
         try{
             taskService.createTask(taskDto, author);
         } catch (DataIntegrityViolationException ex){
@@ -42,27 +40,37 @@ public class TaskController {
     }
 
     @GetMapping
-    public ResponseEntity<?> viewTasks(Authentication authentication) {
-        if(ObjectUtils.isEmpty(authentication) || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User needs to be logged in to perform this action");
-        }
+    @Transactional(readOnly = true)
+    public ResponseEntity viewTasks(Authentication authentication) {
         List<Task> tasks = new ArrayList<>();
         try{
             tasks = taskService.getTasks();
         } catch (Exception ex){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error fetching tasks. Please try again");
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body(tasks);
+        return ResponseEntity.status(HttpStatus.OK).body(tasks);
     }
 
-    @PostMapping("/{taskId}/approve")
-    public ResponseEntity<String> approveTask(@PathVariable String taskId, Principal principal) {
+    @PostMapping("/{taskId}")
+    public ResponseEntity<String> handleTaskAction(@PathVariable String taskId, @RequestParam("action") String action,
+                                                   @RequestBody(required = false) String commentContent, Principal principal) {
         String username = principal.getName();
-        try{
-            taskService.approveTask(taskId, username);
-            return ResponseEntity.ok("Task approved successfully");
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error approving task: " + ex.getMessage());
+        if("Approve".equalsIgnoreCase(action)) {
+            try {
+                taskService.approveTask(taskId, username);
+                return ResponseEntity.ok("Task approved successfully");
+            } catch (Exception ex) {
+                throw new CannotApproveTaskException("Error approving task: " + ex.getMessage());
+            }
+        } else if("Comment".equalsIgnoreCase(action)) {
+            if(ObjectUtils.isEmpty(commentContent)) {
+                return ResponseEntity.badRequest().body("Comment content is required");
+            } else {
+                taskService.addCommentToTask(taskId, commentContent, username);
+                return ResponseEntity.ok("Comment added successfully");
+            }
+        } else {
+            return ResponseEntity.badRequest().body("Action is invalid");
         }
     }
 }
