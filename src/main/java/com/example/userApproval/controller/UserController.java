@@ -1,16 +1,13 @@
 package com.example.userApproval.controller;
 
 import com.example.userApproval.dto.UserDto;
-import com.example.userApproval.entity.User;
+import com.example.userApproval.service.EmailService;
 import com.example.userApproval.service.impl.UserServiceImpl;
 import com.example.userApproval.util.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
