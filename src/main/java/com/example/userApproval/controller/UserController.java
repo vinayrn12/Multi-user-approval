@@ -25,35 +25,13 @@ public class UserController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> signUp(@RequestBody UserDto userDto) {
-        User user = new User();
-        user.setName(userDto.getName());
-        user.setEmail(userDto.getEmail());
-        user.setPassword(userDto.getPassword());
-
-        if(!ObjectUtils.isEmpty(userService.loadUserByEmail(user.getEmail()))) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("User with email already exists");
-        }
-
-        userService.save(user);
-
+    public ResponseEntity<String> signUp(@RequestBody UserDto userDto) {
+        userService.save(userDto);
         return ResponseEntity.ok("User created successfully");
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody UserDto userDto) {
-        String email = userDto.getEmail();
-
-        // Authenticate user
-        User user = userService.loadUserByEmail(email);
-
-        if (user != null && userService.passwordMatch(user.getPassword(), userDto.getPassword())) {
-            // Generate JWT token
-            String token = jwtTokenUtil.generateToken(email);
-            return ResponseEntity.ok("User login successful: " + token);
-        } else {
-            // Authentication failed
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
-        }
+    public ResponseEntity<String> login(@RequestBody UserDto userDto) {
+        return userService.generateJwtToken(userDto);
     }
 }
