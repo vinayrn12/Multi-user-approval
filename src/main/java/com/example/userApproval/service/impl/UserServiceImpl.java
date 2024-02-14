@@ -88,12 +88,12 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void userSignOff(Principal principal) {
         String username = principal.getName();
+        notifyTaskAuthor(username);
         try {
             userRepository.deleteByUsername(username);
         } catch (Exception ex) {
             throw new DatabaseException("Error signing off user. Please try again later" + ex.getMessage());
         }
-        notifyTaskAuthor(username);
     }
 
     private void notifyTaskAuthor(String username) {
